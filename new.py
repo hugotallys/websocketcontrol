@@ -1,16 +1,11 @@
-#!/usr/bin/env python
 
-import ctypes
-import sys  # We need sys so that we can pass argv to QApplication
-from PyQt6 import QtWidgets, QtGui
-import app
+import matplotlib.pyplot as plt
 import asyncio
 import threading
 import websockets
 import time
-from concurrent.futures import ProcessPoolExecutor
+import threading
 from queue import Queue
-
 queue_out = Queue(maxsize=100)
 queue_out.put([0.0, 0.0, 0.0])
 queue_in = Queue(maxsize=100)
@@ -19,30 +14,49 @@ queue_ref = Queue(maxsize=100)
 queue_ref.put([0.0, 10, 0.0])
 queue_ref_in = Queue(maxsize=100)
 queue_ref_in.put(10)
-loop = False
+
+last_out = [0.0, 0.0, 0.0]
+
+
+def view():
+    x = [0.0]*100
+    y = [1.0]*100
+    plt.plot(x, y)
+    plt.show()
+    while True:
+        try:
+            if not queue_out.empty():
+                last_out = queue_out.get()
+            print(last_out)
+        except Exception as e:
+            print(e)
+            return
 
 
 async def echo(websocket):
+    #x = threading.Thread(target=view)
+    # x.start()
     while True:
         try:
             startTime = time.time()
             await websocket.send("get references")
             received = (await websocket.recv()).split(",")
-            queue_ref.put(received)
+            # queue_ref.put(received)
             # print(received)
             await websocket.send("get outputs")
             received = (await websocket.recv()).split(",")
             # print("Outputs: " + received[1])
+            """plt.scatter(time.time(), float(received[1]))
+            plt.show()"""
             queue_out.put(received)
-            while queue_in.empty():
+            """while queue_in.empty():
                 time.sleep(0.0001)
 
-            await websocket.send("set input|"+str(queue_in.get()))
+            await websocket.send("set input|"+str(queue_in.get()))"""
             # Aqui mestre hugo
             '''if loop:
                 while queue_ref_in.empty():
                     time.sleep(0.0001)
-
                 await websocket.send("set references|"+str(queue_ref_in.get()))'''
             ellapsedTime = 0.0
             while ellapsedTime < 0.01:
@@ -52,40 +66,18 @@ async def echo(websocket):
         except Exception as e:
             print(e)
             return
+    # x.join()
 
 
-def view():
-
-    gui = QtWidgets.QApplication(sys.argv)
-
-    window = app.MainWindow(queue_out, queue_in, queue_ref, queue_ref_in, loop)
-    window.setWindowIcon(QtGui.QIcon("qtui/feedback.png"))
-    window.show()
-    gui.exec()
-
-
-def server():
-
+def server(loop):
+    asyncio.set_event_loop(loop)
     server = websockets.serve(echo, "localhost", 6660)
-    # asyncio.get_event_loop().run_until_complete(server)
-
-
-@asyncio.coroutine
-def main():
-    # Run cpu_bound_operation in the ProcessPoolExecutor
-    # This will make your coroutine block, but won't block
-    # the event loop; other coroutines can run in meantime.
-    yield from loop.run_in_executor(p, server, 5)
+    asyncio.get_event_loop().run_until_complete(server)
+    asyncio.get_event_loop().run_forever()
 
 
 loop = asyncio.get_event_loop()
-p = ProcessPoolExecutor(2)  # Create a ProcessPool with 2 processes
-loop.run_until_complete(main())
-myappid = 'mycompany.myproduct.subproduct.version'  # arbitrary string
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-
-y = threading.Thread(target=view)
-y.start()
-
-asyncio.get_event_loop().run_forever()
-y.join()
+loop = asyncio.new_event_loop()
+x = threading.Thread(target=server, args=(loop,))
+x.start()
+x.join()
