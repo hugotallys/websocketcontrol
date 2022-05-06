@@ -6,6 +6,7 @@ import plotly
 import random
 import plotly.graph_objs as go
 from collections import deque
+import threading
 
 X = deque(maxlen=20)
 X.append(1)

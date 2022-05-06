@@ -6,6 +6,15 @@ import websockets
 import time
 import threading
 from queue import Queue
+import dash
+from dash.dependencies import Output, Input
+from dash import dcc
+from dash import html
+import plotly
+import random
+import plotly.graph_objs as go
+from collections import deque
+
 queue_out = Queue(maxsize=100)
 queue_out.put([0.0, 0.0, 0.0])
 queue_in = Queue(maxsize=100)
@@ -34,7 +43,7 @@ def view():
 
 
 async def echo(websocket):
-    #x = threading.Thread(target=view)
+    # x = threading.Thread(target=view)
     # x.start()
     while True:
         try:
@@ -45,7 +54,7 @@ async def echo(websocket):
             # print(received)
             await websocket.send("get outputs")
             received = (await websocket.recv()).split(",")
-            # print("Outputs: " + received[1])
+            print("Outputs: " + received[1])
             """plt.scatter(time.time(), float(received[1]))
             plt.show()"""
             queue_out.put(received)
@@ -76,8 +85,51 @@ def server(loop):
     asyncio.get_event_loop().run_forever()
 
 
-loop = asyncio.get_event_loop()
-loop = asyncio.new_event_loop()
-x = threading.Thread(target=server, args=(loop,))
-x.start()
-x.join()
+X = deque(maxlen=20)
+X.append(1)
+
+Y = deque(maxlen=20)
+Y.append(1)
+
+app = dash.Dash(__name__)
+
+app.layout = html.Div(
+    [
+        dcc.Graph(id='live-graph', animate=True),
+        dcc.Interval(
+            id='graph-update',
+            interval=100,
+            n_intervals=10000
+
+        ),
+    ]
+)
+
+
+@app.callback(
+    Output('live-graph', 'figure'),
+    [Input('graph-update', 'n_intervals')]
+)
+def update_graph_scatter(n):
+    X.append(X[-1]+1)
+    value = queue_out.get()
+    print(value)
+    Y.append(float(value[1]))  # random.uniform(-0.1, 0.1))
+    data = plotly.graph_objs.Scatter(
+        x=list(X),
+        y=list(Y),
+        name='Scatter',
+        mode='lines+markers'
+    )
+    time.sleep(0.002)
+    return {'data': [data],
+            'layout': go.Layout(xaxis=dict(range=[min(X), max(X)]), yaxis=dict(range=[min(Y), max(Y)]),)}
+
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    x = threading.Thread(target=server, args=(loop,))
+    x.start()
+    app.run_server()
+    x.join()

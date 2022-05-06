@@ -8,17 +8,13 @@ import asyncio
 import threading
 import websockets
 import time
-from concurrent.futures import ProcessPoolExecutor
+
 from queue import Queue
 
 queue_out = Queue(maxsize=100)
-queue_out.put([0.0, 0.0, 0.0])
 queue_in = Queue(maxsize=100)
-queue_in.put(0)
 queue_ref = Queue(maxsize=100)
-queue_ref.put([0.0, 10, 0.0])
 queue_ref_in = Queue(maxsize=100)
-queue_ref_in.put(10)
 loop = False
 
 
@@ -64,28 +60,20 @@ def view():
     gui.exec()
 
 
-def server():
-
-    server = websockets.serve(echo, "localhost", 6660)
-    # asyncio.get_event_loop().run_until_complete(server)
-
-
-@asyncio.coroutine
-def main():
-    # Run cpu_bound_operation in the ProcessPoolExecutor
-    # This will make your coroutine block, but won't block
-    # the event loop; other coroutines can run in meantime.
-    yield from loop.run_in_executor(p, server, 5)
-
-
-loop = asyncio.get_event_loop()
-p = ProcessPoolExecutor(2)  # Create a ProcessPool with 2 processes
-loop.run_until_complete(main())
 myappid = 'mycompany.myproduct.subproduct.version'  # arbitrary string
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-y = threading.Thread(target=view)
-y.start()
 
-asyncio.get_event_loop().run_forever()
-y.join()
+def server(loop):
+    asyncio.set_event_loop(loop)
+    server = websockets.serve(echo, "localhost", 6660)
+    asyncio.get_event_loop().run_until_complete(server)
+    asyncio.get_event_loop().run_forever()
+
+
+loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
+x = threading.Thread(target=server, args=(loop,))
+x.start()
+view()
+x.join()
