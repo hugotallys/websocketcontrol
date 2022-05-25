@@ -1,7 +1,6 @@
 import os
 import math
 
-import numpy as np
 from PyQt6 import QtWidgets
 from main_window import Ui_MainWindow
 from dynamic_plotter import DynamicPlotter
@@ -70,10 +69,10 @@ class ThreadedServer(QRunnable):
                     self.controller.apply(u)
                     await websocket.send("set input|" + f"{u}")
                     metrics = self.controller.error_metrics()
-                    self.lcdNumberIAE.display(metrics["IAE"])
-                    self.lcdNumberISE.display(metrics["ISE"])
-                    self.lcdNumberITAE.display(metrics["ITAE"])
-                    self.lcdNumberGoodHeart.display(metrics["GoodHeart"])
+                    self.lcdNumberIAE.display(metrics[0])
+                    self.lcdNumberISE.display(metrics[1])
+                    self.lcdNumberITAE.display(metrics[2])
+                    self.lcdNumberGoodHeart.display(metrics[3])
                 else:
                     if input is not None:
                         await websocket.send("set input|" + str(input))
@@ -204,10 +203,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def change_loop(self, i):
         if self.comboBoxLoop.itemText(i) == "Closed":
             self.server.plotter.loop = 1.0
-            self.doubleBoxSetPoint.setEnabled(True)
         else:
             self.server.plotter.loop = 0.0
-            self.doubleBoxSetPoint.setEnabled(False)
 
     def change_wave_form(self, i):
         wave_form = self.comboBoxWaveForm.itemText(i)

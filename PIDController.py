@@ -34,24 +34,19 @@ class PIDController(Control):
         e = self.e(0)
         u = self.u(0)
 
+        N = int(self.time / self.T)
+
         self.IAE += np.abs(e)
         self.ISE += e**2
         self.ITAE += self.time * np.abs(e)
 
         self.etas[0] += u
         self.etas[1] += (u - self.etas[0])**2
-        self.etas[2] += np.abs(e)
-
-        self.etas *= self.time
+        self.etas[2] += e**2
 
         self.GoodHart = np.dot(self.alphas, self.etas)
 
-        return {
-            "IAE": "%.2f" % self.IAE,
-            "ISE": "%.2f" % self.ISE,
-            "ITAE": "%.2f" % self.ITAE,
-            "GoodHeart": "%.2f" % self.GoodHart
-        }
+        return np.array([self.IAE, self.ISE, self.ITAE, self.GoodHart]) / N
 
 
 class PI_DController(PIDController):
