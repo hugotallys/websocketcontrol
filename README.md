@@ -90,6 +90,26 @@ Comparando os controladores `PID`, `PI-D` e `I-PD` para valores de `Kp = 1.0`, `
 ![PI-D](images/pi-d.jpg)
 ![I-PD](images/i-pd.jpg)
 
+# Sintonizando o controlador
+
+Sintonizando o controlador através do método Ziegler e Nichols em Malha Fechada chegamos a valores de `Ku ~ 1.06` e `Pu2.5` onde inferimos os seguintes valres de ganho proporcional e tempos derivativo e integral:
+
+|     |  Kp  |  Ti  |  Td  |
+|-----|------|------|------|
+| P   | 0.53 |      |      |
+| PI  | 0.48 | 2.08 |      |
+| PID | 0.63 | 1.25 | 0.31 |
+
+
+### Oscilação com amplitude constante para `Kp ~ 1.06`
+![amp-cte](images/amplitude-constante.jpg)
+
+### Controlador sintonizado através dos valores da tabela
+![sintonizacap](images/sintonizado.jpg)
+
+### Referência tipo senóide - Bloco Vermelho
+![referencia-seno](images/referencia-seno-vemelho.jpg)
+
 # Setup inicial
 
 ```console
