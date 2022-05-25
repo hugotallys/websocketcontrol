@@ -67,11 +67,28 @@ foi utilizada para fácil desenvolvimento e prototipação da interface de usuá
 
 # Malha Aberta e Fechada
 
-É possível selecionar o sistema como malha aberta ou malha fechada. Em caso de malha aberta, uma curva de entrada é aplicada diretamente ao sistema. Já no caso de malha fechada, é aplicado como entrada do sistema a curva de referência menos a saída anterior do sistema. 
+É possível selecionar o sistema como malha aberta ou malha fechada. Em caso de malha aberta, uma curva de entrada é aplicada diretamente ao sistema. Já no caso de malha fechada, é aplicado como entrada do sistema a curva de referência menos a saída anterior do sistema (sinal de erro). Além disso, o sinal de referência pode ser configurado de maneira semelhante à entrada com formas de onda diferentes (senoidal, quadrada etc). Também é possivel selecionar qual saída sera utilizada como fator para calcular o erro em malha fechada (posição do bloco vermelho ou verde).
 
 # Controlador PID
 
-É possível aplicar um controlador Proporcional Integrador Derivativo no sistema, regulando os ganhos para a melhor resposta, seja em tempo de convergência, overshoot, tempo de subida.
+É possível aplicar um controlador Proporcional Integrador Derivativo no sistema, regulando os ganhos para a melhor resposta, seja em tempo de convergência, overshoot, tempo de subida. Para cada tipo de controlador selecionado é possivel determinar valores de ganho proporcional `Kp`, derivativo `Kd` ou integral `Ki` ou constantes de tempo integral `Ti` ou derivativo `Td`. Variações do esquema `PID` também foram implementadas sendo elas o controle `PI-D` e `I-PD`.
+
+# Avaliação dos controladores
+
+A avaliação para cada controlador é feita a partir do momento que o mesmo é instanciado, onde as seguintes métricas de erro (índices de desempenho) são calculadas e mostradas num display na própria interface gráfica:
+
+* IAE - Integral Absolute Error
+* ISE - Integral Square Error
+* ITAE - Integral Time Absolute Error
+* Índice de GoodHart com valores de constantes `[0.4, 0.4, 0.2]`
+
+# Comparação entre os controladores
+
+Comparando os controladores `PID`, `PI-D` e `I-PD` para valores de `Kp = 1.0`, `Kd = Ki = 0.5` com o sinal de referência constante `R = 10`:
+
+![PID](images/pid.jpg)
+![PI-D](images/pi-d.jpg)
+![I-PD](images/i-pd.jpg)
 
 # Setup inicial
 
